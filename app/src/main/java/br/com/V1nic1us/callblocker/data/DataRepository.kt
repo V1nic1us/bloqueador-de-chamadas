@@ -1,4 +1,4 @@
-package com.example.bloqueadordechamadas.data
+package br.com.V1nic1us.callblocker.data
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

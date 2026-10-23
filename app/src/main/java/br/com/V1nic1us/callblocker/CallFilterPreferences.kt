@@ -1,4 +1,4 @@
-package com.example.bloqueadordechamadas
+package br.com.V1nic1us.callblocker
 
 import android.content.Context
 

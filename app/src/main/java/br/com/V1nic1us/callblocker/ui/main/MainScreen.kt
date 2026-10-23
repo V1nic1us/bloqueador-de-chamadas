@@ -1,4 +1,4 @@
-package com.example.bloqueadordechamadas.ui.main
+package br.com.V1nic1us.callblocker.ui.main
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
@@ -9,8 +9,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavKey
-import com.example.bloqueadordechamadas.data.DefaultDataRepository
-import com.example.bloqueadordechamadas.theme.BloqueadorDeChamadasTheme
+import br.com.V1nic1us.callblocker.data.DefaultDataRepository
+import br.com.V1nic1us.callblocker.theme.BloqueadorDeChamadasTheme
 
 @Composable
 fun MainScreen(

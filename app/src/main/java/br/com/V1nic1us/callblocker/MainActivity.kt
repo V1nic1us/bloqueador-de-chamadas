@@ -1,4 +1,4 @@
-package com.example.bloqueadordechamadas
+package br.com.V1nic1us.callblocker
 
 import android.app.role.RoleManager
 import android.os.Bundle
@@ -17,6 +17,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -30,8 +34,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
-import com.example.bloqueadordechamadas.theme.BloqueadorDeChamadasTheme
+import br.com.V1nic1us.callblocker.theme.AppSpacing
+import br.com.V1nic1us.callblocker.theme.BloqueadorDeChamadasTheme
 
 class MainActivity : ComponentActivity() {
   private val preferences by lazy { CallFilterPreferences(this) }
@@ -108,12 +112,31 @@ private fun SettingsScreen(
       Modifier.fillMaxSize()
         .safeDrawingPadding()
         .verticalScroll(rememberScrollState())
-        .padding(24.dp),
-    verticalArrangement = Arrangement.spacedBy(24.dp),
+        .padding(AppSpacing.large),
+    verticalArrangement = Arrangement.spacedBy(AppSpacing.medium),
   ) {
-    Text("Bloqueador de chamadas", style = MaterialTheme.typography.headlineMedium)
+    Text("Bloqueador de chamadas", style = MaterialTheme.typography.headlineLarge)
 
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    FilterControlCard(filterEnabled, onFilterEnabledChange)
+    TreatmentOptionsCard(filterEnabled, selectedMode, onModeChange)
+    ScreeningRoleCard(roleAvailable, roleHeld, onRequestRole)
+  }
+}
+
+@Composable
+private fun FilterControlCard(
+  filterEnabled: Boolean,
+  onFilterEnabledChange: (Boolean) -> Unit,
+) {
+  Card(
+    modifier = Modifier.fillMaxWidth(),
+    shape = MaterialTheme.shapes.large,
+    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+  ) {
+    Column(
+      modifier = Modifier.padding(AppSpacing.large),
+      verticalArrangement = Arrangement.spacedBy(AppSpacing.small),
+    ) {
       Row(
         modifier =
           Modifier.fillMaxWidth()
@@ -123,11 +146,11 @@ private fun SettingsScreen(
               onValueChange = onFilterEnabledChange,
             ),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
       ) {
         Text(
           "Filtrar chamadas fora dos contatos",
-          modifier = Modifier.weight(1f).padding(end = 12.dp),
+          modifier = Modifier.weight(1f),
           style = MaterialTheme.typography.titleMedium,
         )
         Switch(checked = filterEnabled, onCheckedChange = null)
@@ -135,11 +158,28 @@ private fun SettingsScreen(
       Text(
         "Ao ativar, o app aplica a opção abaixo às chamadas encaminhadas pelo Android.",
         style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
     }
+  }
+}
 
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-      Text("O que fazer com essas chamadas", style = MaterialTheme.typography.titleMedium)
+@Composable
+private fun TreatmentOptionsCard(
+  filterEnabled: Boolean,
+  selectedMode: Mode,
+  onModeChange: (Mode) -> Unit,
+) {
+  Card(
+    modifier = Modifier.fillMaxWidth(),
+    shape = MaterialTheme.shapes.large,
+    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+  ) {
+    Column(
+      modifier = Modifier.padding(AppSpacing.large),
+      verticalArrangement = Arrangement.spacedBy(AppSpacing.small),
+    ) {
+      Text("O que fazer com essas chamadas", style = MaterialTheme.typography.titleLarge)
       ModeChoice(
         label = "Recusar automaticamente",
         mode = Mode.REJECT,
@@ -155,9 +195,25 @@ private fun SettingsScreen(
         onModeChange = onModeChange,
       )
     }
+  }
+}
 
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-      Text("Serviço de filtragem do Android", style = MaterialTheme.typography.titleMedium)
+@Composable
+private fun ScreeningRoleCard(
+  roleAvailable: Boolean,
+  roleHeld: Boolean,
+  onRequestRole: () -> Unit,
+) {
+  Card(
+    modifier = Modifier.fillMaxWidth(),
+    shape = MaterialTheme.shapes.large,
+    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+  ) {
+    Column(
+      modifier = Modifier.padding(AppSpacing.large),
+      verticalArrangement = Arrangement.spacedBy(AppSpacing.medium),
+    ) {
+      Text("Serviço de filtragem do Android", style = MaterialTheme.typography.titleLarge)
       Text(
         when {
           roleHeld -> "Este app está definido como serviço de filtragem de chamadas."
@@ -165,9 +221,12 @@ private fun SettingsScreen(
           else -> "O serviço de filtragem de chamadas não está disponível neste dispositivo."
         },
         style = MaterialTheme.typography.bodyMedium,
+        color = if (roleHeld) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
       )
       if (roleAvailable && !roleHeld) {
-        Button(onClick = onRequestRole) { Text("Definir como app de filtragem") }
+        Button(onClick = onRequestRole, modifier = Modifier.fillMaxWidth()) {
+          Text("Definir como app de filtragem")
+        }
       }
     }
   }
@@ -181,16 +240,26 @@ private fun ModeChoice(
   enabled: Boolean,
   onModeChange: (Mode) -> Unit,
 ) {
+  val optionShape = MaterialTheme.shapes.medium
+  val optionContainer =
+    if (enabled && selectedMode == mode) {
+      MaterialTheme.colorScheme.primaryContainer
+    } else {
+      MaterialTheme.colorScheme.surfaceContainerLow
+    }
+
   Row(
     modifier =
       Modifier.fillMaxWidth()
+        .clip(optionShape)
+        .background(optionContainer, optionShape)
         .selectable(
           selected = selectedMode == mode,
           enabled = enabled,
           role = Role.RadioButton,
           onClick = { onModeChange(mode) },
         )
-        .padding(vertical = 8.dp),
+        .padding(horizontal = AppSpacing.medium, vertical = AppSpacing.small),
     verticalAlignment = Alignment.CenterVertically,
   ) {
     RadioButton(
@@ -200,8 +269,13 @@ private fun ModeChoice(
     )
     Text(
       text = label,
-      modifier = Modifier.padding(start = 8.dp),
-      color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+      modifier = Modifier.padding(start = AppSpacing.small),
+      color = when {
+        !enabled -> MaterialTheme.colorScheme.onSurfaceVariant
+        selectedMode == mode -> MaterialTheme.colorScheme.onPrimaryContainer
+        else -> MaterialTheme.colorScheme.onSurface
+      },
+      style = MaterialTheme.typography.bodyLarge,
     )
   }
 }

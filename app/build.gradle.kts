@@ -5,14 +5,15 @@ plugins {
 }
 
 android {
-    namespace = "com.example.bloqueadordechamadas"
+    namespace = "br.com.V1nic1us.callblocker"
     compileSdk = 36
     defaultConfig {
-        applicationId = "com.example.bloqueadordechamadas"
+        applicationId = "br.com.V1nic1us.callblocker"
         minSdk = 29
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {

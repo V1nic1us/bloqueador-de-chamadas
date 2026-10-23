@@ -1,9 +1,9 @@
-package com.example.bloqueadordechamadas.ui.main
+package br.com.V1nic1us.callblocker.ui.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.bloqueadordechamadas.data.DataRepository
-import com.example.bloqueadordechamadas.ui.main.MainScreenUiState.Success
+import br.com.V1nic1us.callblocker.data.DataRepository
+import br.com.V1nic1us.callblocker.ui.main.MainScreenUiState.Success
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch

@@ -1,4 +1,4 @@
-package com.example.bloqueadordechamadas
+package br.com.V1nic1us.callblocker
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import com.example.bloqueadordechamadas.ui.main.MainScreen
+import br.com.V1nic1us.callblocker.ui.main.MainScreen
 
 @Composable
 fun MainNavigation() {
