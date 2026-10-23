@@ -13,7 +13,11 @@ class CallFilterPreferences(context: Context) {
         Context.MODE_PRIVATE,
     )
 
-    fun isEnabled(): Boolean = preferences.getBoolean(KEY_ENABLED, false)
+    fun isEnabled(): Boolean = try {
+        preferences.getBoolean(KEY_ENABLED, false)
+    } catch (_: ClassCastException) {
+        false
+    }
 
     fun mode(): Mode = when (try {
         preferences.getString(KEY_MODE, null)
