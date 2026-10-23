@@ -31,7 +31,7 @@ A escolha do app como serviço de filtragem é controlada pelo usuário através
 
 ## Plataforma e dependências
 
-Projeto Android nativo em Kotlin, usando as APIs da plataforma e sem serviço remoto. A opção de silenciar o toque requer Android 10 (API 29) ou superior. A implementação deve definir uma versão mínima compatível e tratar dispositivos abaixo desse nível sem apresentar uma opção que não possa cumprir. A API de filtragem está disponível desde Android 7 (API 24), mas essa diferença de suporte deve ser refletida na configuração do projeto e na interface.
+Projeto Android nativo em Kotlin, usando as APIs da plataforma e sem serviço remoto. A versão mínima será Android 10 (API 29), necessária para oferecer ambos os comportamentos com a API oficial. Embora a filtragem básica exista desde Android 7 (API 24), manter a versão mínima em 29 evita uma opção de silêncio que não possa ser cumprida em versões antigas.
 
 ## Fora do escopo
 
