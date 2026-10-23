@@ -17,3 +17,9 @@ The template also produced its default Compose navigation, resources, and local/
 ## Review
 
 Inspected the app Gradle configuration, manifest, activity source, settings, generated file list, and git changes. The package, application ID, minSdk and activity path agree across the scaffold. No build or test execution was performed.
+
+## Review fix round
+
+Changed `app/src/main/AndroidManifest.xml` to set `android:allowBackup="false"`, keeping future app preferences on-device. Removed the generated placeholder local and instrumented test source files; template test dependencies remain in the Gradle configuration because this round avoids unrelated dependency changes.
+
+Checks performed: inspected the updated manifest, confirmed the placeholder source files are absent, and reviewed the Git diff with whitespace checks. Tests were not run because they were not requested.
