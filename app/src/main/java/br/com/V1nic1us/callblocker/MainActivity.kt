@@ -1,6 +1,8 @@
 package br.com.V1nic1us.callblocker
 
+import android.Manifest
 import android.app.role.RoleManager
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -45,6 +47,20 @@ class MainActivity : ComponentActivity() {
   private var selectedMode by mutableStateOf(Mode.SILENCE)
   private var roleAvailable by mutableStateOf(false)
   private var roleHeld by mutableStateOf(false)
+  private var contactsPermissionDenied by mutableStateOf(false)
+
+  private val requestContactsPermission =
+    registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+      if (granted) {
+        preferences.setEnabled(true)
+        filterEnabled = true
+        contactsPermissionDenied = false
+      } else {
+        preferences.setEnabled(false)
+        filterEnabled = false
+        contactsPermissionDenied = true
+      }
+    }
 
   private val requestRole =
     registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -67,9 +83,15 @@ class MainActivity : ComponentActivity() {
             selectedMode = selectedMode,
             roleAvailable = roleAvailable,
             roleHeld = roleHeld,
+            contactsPermissionDenied = contactsPermissionDenied,
             onFilterEnabledChange = { enabled ->
-              preferences.setEnabled(enabled)
-              filterEnabled = enabled
+              if (enabled && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                requestContactsPermission.launch(Manifest.permission.READ_CONTACTS)
+              } else {
+                preferences.setEnabled(enabled)
+                filterEnabled = enabled
+                contactsPermissionDenied = false
+              }
             },
             onModeChange = { mode ->
               preferences.setMode(mode)
@@ -103,6 +125,7 @@ private fun SettingsScreen(
   selectedMode: Mode,
   roleAvailable: Boolean,
   roleHeld: Boolean,
+  contactsPermissionDenied: Boolean,
   onFilterEnabledChange: (Boolean) -> Unit,
   onModeChange: (Mode) -> Unit,
   onRequestRole: () -> Unit,
@@ -117,7 +140,7 @@ private fun SettingsScreen(
   ) {
     Text("Bloqueador de chamadas", style = MaterialTheme.typography.headlineLarge)
 
-    FilterControlCard(filterEnabled, onFilterEnabledChange)
+    FilterControlCard(filterEnabled, contactsPermissionDenied, onFilterEnabledChange)
     TreatmentOptionsCard(filterEnabled, selectedMode, onModeChange)
     ScreeningRoleCard(roleAvailable, roleHeld, onRequestRole)
   }
@@ -126,6 +149,7 @@ private fun SettingsScreen(
 @Composable
 private fun FilterControlCard(
   filterEnabled: Boolean,
+  contactsPermissionDenied: Boolean,
   onFilterEnabledChange: (Boolean) -> Unit,
 ) {
   Card(
@@ -160,6 +184,13 @@ private fun FilterControlCard(
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
+      if (contactsPermissionDenied) {
+        Text(
+          "Permita o acesso aos contatos para ativar o filtro.",
+          style = MaterialTheme.typography.bodyMedium,
+          color = MaterialTheme.colorScheme.error,
+        )
+      }
     }
   }
 }

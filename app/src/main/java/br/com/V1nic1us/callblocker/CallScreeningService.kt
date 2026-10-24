@@ -8,13 +8,19 @@ class CallScreeningService : AndroidCallScreeningService() {
         val response = AndroidCallScreeningService.CallResponse.Builder()
         val handle = callDetails.handle
         val preferences = CallFilterPreferences(this)
+        val filterEnabled = preferences.isEnabled()
+        val isIncomingCall = callDetails.callDirection == Call.Details.DIRECTION_INCOMING
+        val address = handle?.schemeSpecificPart
+        val isKnownContact = filterEnabled && isIncomingCall && handle?.scheme == "tel" &&
+            !address.isNullOrBlank() && ContactLookup(this).contains(address)
         when (
             CallScreeningPolicy.evaluate(
-                isIncomingCall = callDetails.callDirection == Call.Details.DIRECTION_INCOMING,
+                isIncomingCall = isIncomingCall,
                 handleScheme = handle?.scheme,
-                address = handle?.schemeSpecificPart,
-                filterEnabled = preferences.isEnabled(),
+                address = address,
+                filterEnabled = filterEnabled,
                 mode = preferences.mode(),
+                isKnownContact = isKnownContact,
             )
         ) {
             CallAction.ALLOW -> Unit
