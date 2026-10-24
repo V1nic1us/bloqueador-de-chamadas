@@ -11,6 +11,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -85,5 +86,34 @@ class ContactLookupInstrumentedTest {
             }
         }
         assertFalse(ContactLookup(failingContext).contains("+16505550142"))
+    }
+
+    @Test
+    fun enterpriseLookupFindsContactOutsidePersonalProfile() {
+        val queriedUris = mutableListOf<android.net.Uri>()
+        val lookup = ContactLookup(context) { uri ->
+            queriedUris += uri
+            uri.toString().startsWith(ContactsContract.PhoneLookup.ENTERPRISE_CONTENT_FILTER_URI.toString())
+        }
+
+        assertTrue(lookup.contains("+1 (650) 555-0142"))
+        assertEquals(1, queriedUris.size)
+        assertTrue(queriedUris.single().toString().contains("%2B16505550142"))
+    }
+
+    @Test
+    fun unsupportedEnterpriseLookupFallsBackToPersonalContacts() {
+        val queriedUris = mutableListOf<android.net.Uri>()
+        val lookup = ContactLookup(context) { uri ->
+            queriedUris += uri
+            if (uri.toString().startsWith(ContactsContract.PhoneLookup.ENTERPRISE_CONTENT_FILTER_URI.toString())) {
+                throw IllegalArgumentException("Enterprise lookup unavailable")
+            }
+            true
+        }
+
+        assertTrue(lookup.contains("+16505550142"))
+        assertEquals(2, queriedUris.size)
+        assertTrue(queriedUris.last().toString().startsWith(ContactsContract.PhoneLookup.CONTENT_FILTER_URI.toString()))
     }
 }
