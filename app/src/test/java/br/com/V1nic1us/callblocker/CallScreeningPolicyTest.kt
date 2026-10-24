@@ -47,6 +47,35 @@ class CallScreeningPolicyTest {
     }
 
     @Test
+    fun `allows known contacts when filtering is enabled`() {
+        assertEquals(
+            CallAction.ALLOW,
+            CallScreeningPolicy.evaluate(
+                isIncomingCall = true,
+                handleScheme = "tel",
+                address = "+5511999999999",
+                filterEnabled = true,
+                mode = Mode.REJECT,
+                isKnownContact = true,
+            ),
+        )
+    }
+
+    @Test
+    fun `defaults to treating calls as unknown`() {
+        assertEquals(
+            CallAction.REJECT,
+            CallScreeningPolicy.evaluate(
+                isIncomingCall = true,
+                handleScheme = "tel",
+                address = "+5511999999999",
+                filterEnabled = true,
+                mode = Mode.REJECT,
+            ),
+        )
+    }
+
+    @Test
     fun `allows outgoing calls`() {
         assertActionAllowed(isIncomingCall = false, scheme = "tel", address = "+5511999999999")
     }
