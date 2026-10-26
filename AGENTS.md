@@ -9,6 +9,8 @@ This is a single-module Android application built with Kotlin and Jetpack Compos
 - `app/src/test/`: JVM unit tests for policy and non-Android logic.
 - `app/src/androidTest/`: emulator/device tests for Compose UI, preferences, contacts, and permissions.
 - `docs/superpowers/`: design specifications and implementation plans.
+- `README.md`: setup, dependency, build, installation, and testing instructions.
+- `.github/pull_request_template.md`: checklist for documenting tests and device validation in pull requests.
 
 ## Build, Test, and Development Commands
 
@@ -22,6 +24,8 @@ Run commands from the repository root:
 ```
 
 The app targets Android SDK 36, has a minimum SDK of 29, and uses Java/Kotlin toolchain 17. A connected emulator is required for `connectedDebugAndroidTest`.
+
+Use the Gradle Wrapper from the repository root. The README contains the complete setup and installation flow, including `adb install -r` and `./gradlew installDebug`.
 
 ## Coding Style & Naming Conventions
 
@@ -39,10 +43,14 @@ Use JUnit tests under `app/src/test` for platform-independent behavior. Use `app
 
 Use short, imperative commit subjects describing one change, for example `Allow known contacts through call screening`. Keep commits focused. Pull requests should target `dev`, explain the user-visible behavior, list verification commands and emulator/device coverage, and call out any unverified physical-device or live-call behavior. Include screenshots when changing the Compose UI.
 
+Use `.github/pull_request_template.md` for every pull request. Mark the automated tests that were actually run, identify whether validation used an emulator or physical device, record the Android version and result, and document any unavailable checks. Changes are normally merged into `dev`; promotion from `dev` to `main` is handled by a separate release pull request.
+
+The Android release workflow runs only after a pull request is merged into `main`. Do not use a tag push as the release trigger; validate the merged PR flow when changing `.github/workflows/release-android.yml`.
+
 ## Security & Configuration Tips
 
 Contact data and call-filter preferences are local app data. Do not log phone numbers or commit secrets. Changes involving `READ_CONTACTS`, Telecom screening, or backup rules require tests and documented permission/fallback behavior.
 
 ## Codex Workflow
 
-Before editing, inspect relevant files, the branch, and existing tests. Keep changes scoped and preserve unrelated work. Use a feature/fix branch, target `dev` for PRs, and never rewrite shared history without approval. For behavior changes, add a regression test first, confirm it fails, then implement the smallest fix. Before completion, run unit tests, instrumented tests when a device is available, and `assembleDebug`; report unavailable checks honestly.
+Before editing, inspect relevant files, the branch, and existing tests. Keep changes scoped and preserve unrelated work. Create feature/fix or documentation branches from `dev`, and never rewrite shared history without approval. For behavior changes, add a regression test first, confirm it fails, then implement the smallest fix. For documentation-only changes, validate referenced commands and paths when practical. Before completion, run unit tests, instrumented tests when a device is available, and `assembleDebug`; report unavailable checks honestly.
