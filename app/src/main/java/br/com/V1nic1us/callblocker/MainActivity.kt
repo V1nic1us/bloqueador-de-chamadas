@@ -1,7 +1,13 @@
 package br.com.V1nic1us.callblocker
 
+import android.Manifest
 import android.app.role.RoleManager
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -40,11 +46,31 @@ import br.com.V1nic1us.callblocker.theme.BloqueadorDeChamadasTheme
 class MainActivity : ComponentActivity() {
   private val preferences by lazy { CallFilterPreferences(this) }
   private val roleManager by lazy { getSystemService(RoleManager::class.java) }
+  private val contactPermissionRequests by lazy {
+    getSharedPreferences("contact_permission_requests", Context.MODE_PRIVATE)
+  }
 
   private var filterEnabled by mutableStateOf(false)
   private var selectedMode by mutableStateOf(Mode.SILENCE)
   private var roleAvailable by mutableStateOf(false)
   private var roleHeld by mutableStateOf(false)
+  private var contactsPermissionDenied by mutableStateOf(false)
+  private var showSettingsGuidance by mutableStateOf(false)
+
+  private val requestContactsPermission =
+    registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+      if (granted) {
+        preferences.setEnabled(true)
+        filterEnabled = true
+        contactsPermissionDenied = false
+        showSettingsGuidance = false
+      } else {
+        preferences.setEnabled(false)
+        filterEnabled = false
+        contactsPermissionDenied = true
+        showSettingsGuidance = false
+      }
+    }
 
   private val requestRole =
     registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -67,9 +93,25 @@ class MainActivity : ComponentActivity() {
             selectedMode = selectedMode,
             roleAvailable = roleAvailable,
             roleHeld = roleHeld,
+            contactsPermissionDenied = contactsPermissionDenied,
+            showSettingsGuidance = showSettingsGuidance,
             onFilterEnabledChange = { enabled ->
-              preferences.setEnabled(enabled)
-              filterEnabled = enabled
+              if (enabled && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                if (contactPermissionRequests.getBoolean("requested", false) &&
+                  !shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS)) {
+                  contactsPermissionDenied = true
+                  showSettingsGuidance = true
+                } else {
+                  contactPermissionRequests.edit().putBoolean("requested", true).apply()
+                  showSettingsGuidance = false
+                  requestContactsPermission.launch(Manifest.permission.READ_CONTACTS)
+                }
+              } else {
+                preferences.setEnabled(enabled)
+                filterEnabled = enabled
+                contactsPermissionDenied = false
+                showSettingsGuidance = false
+              }
             },
             onModeChange = { mode ->
               preferences.setMode(mode)
@@ -80,6 +122,14 @@ class MainActivity : ComponentActivity() {
                 requestRole.launch(roleManager.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING))
               }
             },
+            onOpenAppSettings = {
+              startActivity(
+                Intent(
+                  Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                  Uri.fromParts("package", packageName, null),
+                ),
+              )
+            },
           )
         }
       }
@@ -89,6 +139,10 @@ class MainActivity : ComponentActivity() {
   override fun onResume() {
     super.onResume()
     refreshRoleState()
+    if (checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+      contactsPermissionDenied = false
+      showSettingsGuidance = false
+    }
   }
 
   private fun refreshRoleState() {
@@ -103,9 +157,12 @@ private fun SettingsScreen(
   selectedMode: Mode,
   roleAvailable: Boolean,
   roleHeld: Boolean,
+  contactsPermissionDenied: Boolean,
+  showSettingsGuidance: Boolean,
   onFilterEnabledChange: (Boolean) -> Unit,
   onModeChange: (Mode) -> Unit,
   onRequestRole: () -> Unit,
+  onOpenAppSettings: () -> Unit,
 ) {
   Column(
     modifier =
@@ -117,7 +174,13 @@ private fun SettingsScreen(
   ) {
     Text("Bloqueador de chamadas", style = MaterialTheme.typography.headlineLarge)
 
-    FilterControlCard(filterEnabled, onFilterEnabledChange)
+    FilterControlCard(
+      filterEnabled,
+      contactsPermissionDenied,
+      showSettingsGuidance,
+      onFilterEnabledChange,
+      onOpenAppSettings,
+    )
     TreatmentOptionsCard(filterEnabled, selectedMode, onModeChange)
     ScreeningRoleCard(roleAvailable, roleHeld, onRequestRole)
   }
@@ -126,7 +189,10 @@ private fun SettingsScreen(
 @Composable
 private fun FilterControlCard(
   filterEnabled: Boolean,
+  contactsPermissionDenied: Boolean,
+  showSettingsGuidance: Boolean,
   onFilterEnabledChange: (Boolean) -> Unit,
+  onOpenAppSettings: () -> Unit,
 ) {
   Card(
     modifier = Modifier.fillMaxWidth(),
@@ -160,6 +226,22 @@ private fun FilterControlCard(
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
+      if (contactsPermissionDenied) {
+        Text(
+          if (showSettingsGuidance) {
+            "Acesso aos contatos bloqueado. Abra as configurações do app para permitir."
+          } else {
+            "Permita o acesso aos contatos para ativar o filtro."
+          },
+          style = MaterialTheme.typography.bodyMedium,
+          color = MaterialTheme.colorScheme.error,
+        )
+        if (showSettingsGuidance) {
+          Button(onClick = onOpenAppSettings) {
+            Text("Abrir configurações do app")
+          }
+        }
+      }
     }
   }
 }

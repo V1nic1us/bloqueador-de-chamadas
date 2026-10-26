@@ -14,6 +14,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import android.content.Context
+import android.Manifest
+import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -31,11 +33,14 @@ class CallFilterSettingsInstrumentedTest {
     @Before
     fun resetSettings() {
         preferences.edit().clear().commit()
+        InstrumentationRegistry.getInstrumentation().uiAutomation
+            .adoptShellPermissionIdentity(Manifest.permission.READ_CONTACTS)
         composeRule.activityRule.scenario.recreate()
     }
 
     @After
     fun clearSettings() {
+        InstrumentationRegistry.getInstrumentation().uiAutomation.dropShellPermissionIdentity()
         preferences.edit().clear().commit()
     }
 
