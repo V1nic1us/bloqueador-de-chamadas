@@ -15,10 +15,13 @@ object CallScreeningPolicy {
         address: String?,
         filterEnabled: Boolean,
         mode: Mode,
+        isKnownContact: Boolean = false,
     ): CallAction {
         if (!filterEnabled || !isIncomingCall || handleScheme != "tel" || address.isNullOrBlank()) {
             return CallAction.ALLOW
         }
+
+        if (isKnownContact) return CallAction.ALLOW
 
         return when (mode) {
             Mode.REJECT -> CallAction.REJECT
