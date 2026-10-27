@@ -1,9 +1,11 @@
 name: Android release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
 
 permissions:
   contents: write
@@ -11,10 +13,13 @@ permissions:
 jobs:
   build-and-release:
     name: Build APK and publish release
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -34,11 +39,13 @@ jobs:
       - name: Prepare release APK
         run: |
           mkdir -p dist
-          cp app/build/outputs/apk/debug/app-debug.apk "dist/bloqueador-de-chamadas-${GITHUB_REF_NAME}.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk "dist/bloqueador-de-chamadas-pr-${{ github.event.pull_request.number }}.apk"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "${{ github.ref_name }}"
+          tag_name: "pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.merge_commit_sha }}"
+          name: "PR #${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}"
+          target_commitish: ${{ github.event.pull_request.merge_commit_sha }}
           generate_release_notes: true
           files: dist/*.apk
