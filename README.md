@@ -85,7 +85,7 @@ pull_request:
     - closed
 ```
 
-Depois de confirmar o merge da PR, o GitHub Actions executa os testes, gera o APK de debug e publica um GitHub Release associado à PR. O workflow é ignorado quando a PR é fechada sem merge.
+Depois de confirmar o merge da PR, o GitHub Actions busca a última tag semântica (`vMAJOR.MINOR.PATCH`), incrementa o número do patch e publica a próxima versão (`v1.0.1`, depois `v1.0.2`, e assim por diante) com o APK de debug. O workflow é ignorado quando a PR é fechada sem merge.
 
 ## Instalar no dispositivo ou emulador
 
